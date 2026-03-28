@@ -11,6 +11,12 @@ cd ai-terminal-dashboard/backend
 uvicorn main:app --reload
 ```
 
+## open on browser
+
+```
+http://127.0.0.1:8000
+```
+
 ## To run ollama + claude code
 
 ```
