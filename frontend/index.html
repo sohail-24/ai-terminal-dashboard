@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Terminal Dashboard</title>
+
+  <!-- xterm.js CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b1020;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .header {
+      background: #111827;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #1f2937;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #38bdf8;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      border: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .stop-btn {
+      background: #ef4444;
+      color: white;
+    }
+
+    .clear-btn {
+      background: #2563eb;
+      color: white;
+    }
+
+    .status {
+      padding: 10px 20px;
+      background: #0f172a;
+      border-bottom: 1px solid #1f2937;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    #terminal {
+      flex: 1;
+      padding: 10px;
+      overflow: hidden;
+    }
+
+    .xterm {
+      height: 100%;
+    }
+
+    .xterm-viewport {
+      overflow-y: auto !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="title">⚡ AI Terminal Dashboard (xterm.js)</div>
+    <div class="controls">
+      <button class="stop-btn" onclick="stopCommand()">Stop</button>
+      <button class="clear-btn" onclick="clearTerminal()">Clear</button>
+    </div>
+  </div>
+
+  <div class="status" id="statusBar">
+    Connecting to backend...
+  </div>
+
+  <div id="terminal"></div>
+
+  <!-- xterm.js -->
+  <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+
+  <script>
+    const term = new Terminal({
+      cursorBlink: true,
+      fontSize: 15,
+      fontFamily: '"Fira Code", monospace',
+      theme: {
+        background: '#020617',
+        foreground: '#e5e7eb',
+        cursor: '#22c55e',
+        black: '#000000',
+        red: '#ef4444',
+        green: '#22c55e',
+        yellow: '#f59e0b',
+        blue: '#3b82f6',
+        magenta: '#d946ef',
+        cyan: '#06b6d4',
+        white: '#f8fafc',
+        brightBlack: '#64748b',
+        brightRed: '#f87171',
+        brightGreen: '#4ade80',
+        brightYellow: '#facc15',
+        brightBlue: '#60a5fa',
+        brightMagenta: '#e879f9',
+        brightCyan: '#22d3ee',
+        brightWhite: '#ffffff'
+      }
+    });
+
+    const terminalContainer = document.getElementById("terminal");
+    const statusBar = document.getElementById("statusBar");
+
+    term.open(terminalContainer);
+    term.focus();
+
+    const ws = new WebSocket("ws://127.0.0.1:8000/ws");
+
+    function stopCommand() {
+      ws.send(JSON.stringify({ action: "stop" }));
+    }
+
+    function clearTerminal() {
+      term.clear();
+    }
+
+    ws.onopen = () => {
+      statusBar.textContent = "Connected • Real PTY shell active • Ctrl+C supported";
+      term.writeln("Welcome to AI Terminal Dashboard 🚀");
+      term.writeln("");
+    };
+
+    ws.onclose = () => {
+      statusBar.textContent = "Disconnected from backend";
+      term.writeln("\r\n[Disconnected from backend]");
+    };
+
+    ws.onerror = () => {
+      statusBar.textContent = "WebSocket error";
+      term.writeln("\r\n[WebSocket error]");
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        if (data.type === "output") {
+          term.write(data.message);
+        } else if (data.type === "system") {
+          term.write(data.message);
+        } else if (data.type === "error") {
+          term.write(data.message);
+        }
+      } catch (err) {
+        term.write(event.data);
+      }
+    };
+
+    // Send every key directly to backend PTY
+    term.onData((data) => {
+      ws.send(JSON.stringify({
+        action: "input",
+        data: data
+      }));
+    });
+
+    // Keep focus on terminal
+    terminalContainer.addEventListener("click", () => {
+      term.focus();
+    });
+  </script>
+
+</body>
+</html>
