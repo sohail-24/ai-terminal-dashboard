@@ -1,4 +1,6 @@
-## To start
+# To start
+
+---
 
 # run on terminal
 
@@ -7,8 +9,17 @@ git clone https://github.com/sohail-24/ai-terminal-dashboard.git
 ```
 
 ```
-cd ai-terminal-dashboard/backend
+cd ai-terminal-dashboard
 ```
+
+```
+source venv/bin/activate
+```
+
+```
+cd backend
+```
+
 ```
 uvicorn main:app --reload
 ```
@@ -18,10 +29,14 @@ uvicorn main:app --reload
 ```
 http://127.0.0.1:8000
 ```
+
 ---
 
-## To run ollama + claude code
+
+# To run ollama + claude code
 
 ```
 ollama launch claude --model qwen3.5
 ```
+
+---
